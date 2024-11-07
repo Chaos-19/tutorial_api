@@ -25,4 +25,4 @@ class SectionSerializer(serializers.HyperlinkedModelSerializer):
 class LessonSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Lesson
-        fields = ['title', 'content','course', 'section']
+        fields = ['title', 'content','object_id', 'content_type','parent']
