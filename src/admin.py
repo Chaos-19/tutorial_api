@@ -24,8 +24,8 @@ class SectionAdmin(admin.ModelAdmin):
 
 # Step 1: Create a custom form for Lesson
 class LessonAdminForm(forms.ModelForm):
-    content_object = forms.ModelChoiceField(
-        queryset=None,
+    content_object = forms.ChoiceField(
+        choices=[],
         required=False,
         label="Related Object"
     )
@@ -36,24 +36,31 @@ class LessonAdminForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Get content type for Course and Section
-        course_type = ContentType.objects.get_for_model(Course)
-        section_type = ContentType.objects.get_for_model(Section)
         
-        # Combine Course and Section querysets to use as choices in `content_object`
-        self.fields['content_object'].queryset = Course.objects.all() | Section.objects.all()
+        # Get all Course and Section items, prepending labels to show which model they belong to
+        course_choices = [(f"course-{course.id}", f"Course: {course.title}") for course in Course.objects.all()]
+        section_choices = [(f"section-{section.id}", f"Section: {section.title}") for section in Section.objects.all()]
         
+        # Set choices in the content_object field
+        self.fields['content_object'].choices = [("", "Select related object")] + course_choices + section_choices
+        
+        # Preselect the current related object, if it exists
         if self.instance.pk:
-            if self.instance.content_type == course_type:
-                self.fields['content_object'].initial = Course.objects.get(pk=self.instance.object_id)
-            elif self.instance.content_type == section_type:
-                self.fields['content_object'].initial = Section.objects.get(pk=self.instance.object_id)
-    
+            if self.instance.content_type.model == 'course':
+                self.fields['content_object'].initial = f"course-{self.instance.object_id}"
+            elif self.instance.content_type.model == 'section':
+                self.fields['content_object'].initial = f"section-{self.instance.object_id}"
+
     def save(self, commit=True):
         content_object = self.cleaned_data['content_object']
         if content_object:
-            self.instance.content_type = ContentType.objects.get_for_model(content_object)
-            self.instance.object_id = content_object.id
+            # Split choice value into type and ID
+            object_type, object_id = content_object.split("-")
+            if object_type == "course":
+                self.instance.content_type = ContentType.objects.get_for_model(Course)
+            elif object_type == "section":
+                self.instance.content_type = ContentType.objects.get_for_model(Section)
+            self.instance.object_id = object_id
         return super().save(commit)
   
 
@@ -61,5 +68,3 @@ class LessonAdminForm(forms.ModelForm):
 class LessonAdmin(admin.ModelAdmin):
     form = LessonAdminForm
     list_display = ['title', 'content','object_id', 'content_type','parent']
-    
-    
