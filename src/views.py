@@ -1,25 +1,36 @@
-from django.shortcuts import render
-from django.contrib.auth.models import Group, User
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
+from .models import Tutorial, Category, Course, Section, Lesson
+from .serializers import (
+    TutorialSerializer, CategorySerializer, CourseSerializer,
+    SectionSerializer, LessonSerializer
+)
 
-from tutorial.quickstart.serializers import GroupSerializer, UserSerializer
+class TutorialViewSet(viewsets.ModelViewSet):
+    queryset = Tutorial.objects.all()
+    serializer_class = TutorialSerializer
 
-# Create your views here.
+class CategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
 
+    def get_queryset(self):
+        return Category.objects.filter(tutorial_id=self.kwargs["tutorial_id"])
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = User.objects.all().order_by('-date_joined')
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class CourseViewSet(viewsets.ModelViewSet):
+    serializer_class = CourseSerializer
 
+    def get_queryset(self):
+        return Course.objects.filter(category_id=self.kwargs["category_id"])
 
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-    queryset = Group.objects.all().order_by('name')
-    serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class SectionViewSet(viewsets.ModelViewSet):
+    serializer_class = SectionSerializer
+
+    def get_queryset(self):
+        # Fetch the sections related to a particular course
+        return Section.objects.filter(course_id=self.kwargs["course_id"])
+
+class LessonViewSet(viewsets.ModelViewSet):
+    serializer_class = LessonSerializer
+
+    def get_queryset(self):
+        # Fetch the lessons related to a particular section
+        return Lesson.objects.filter(section_id=self.kwargs["section_id"])
