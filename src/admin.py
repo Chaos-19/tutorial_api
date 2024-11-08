@@ -7,20 +7,24 @@ from .models import Tutorial,Category,Course,Section,Lesson
 # Register your models here.
 @admin.register(Tutorial)
 class TutorialAdmin(admin.ModelAdmin):
-    list_display = ["img","title"]
+    list_display = ["title","img"]
+    
     
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'icon','slug', 'tutorial']
+    list_filter = [("tutorial",admin.RelatedOnlyFieldListFilter)]
+    
     
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     list_display = ['title', 'icon','description', 'category']
+    list_filter = [("category",admin.RelatedOnlyFieldListFilter)]
     
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
     list_display = ['title', 'icon','slug','description', 'course']
-
+    list_filter = [("course",admin.RelatedOnlyFieldListFilter)]
 
 # Step 1: Create a custom form for Lesson
 class LessonAdminForm(forms.ModelForm):
@@ -68,3 +72,4 @@ class LessonAdminForm(forms.ModelForm):
 class LessonAdmin(admin.ModelAdmin):
     form = LessonAdminForm
     list_display = ['title', 'content','object_id', 'content_type','parent']
+    list_filter = [("content_type",admin.RelatedOnlyFieldListFilter)]

@@ -23,7 +23,7 @@ class Command(BaseCommand):
             {'category': 'Working with Plugins', 'file': 'categories/basic_database.json'},
             {'category': 'Testing & Debugging', 'file': 'categories/datascience.json'},
             {'category': 'Releasing Your App', 'file': 'categories/advanced_web_development.json'},
-            {'category': 'Flutter Project', 'file': 'categories/datascience.json'},
+            {'category': 'Flutter Project', 'file': 'categories/blockchain.json'},
         ]
 
         for data in files:
