@@ -1,8 +1,11 @@
 from django import forms
 from django.contrib import admin
+from django.utils.html import format_html
 from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.contenttypes.models import ContentType
 from .models import Tutorial,Category,Course,Section,Lesson
+
+from cloudinary import uploader
 
 
 class ParentFilter(admin.SimpleListFilter):
@@ -32,21 +35,80 @@ class ParentFilter(admin.SimpleListFilter):
             object_id=obj_id
         )
 
+class CloudinaryAdminMixin:
+    cloudinary_fields = []  # Override this in child classes with field names
+    thumbnail_size = 50  # Default thumbnail size in pixels
+    
+    def save_model(self, request, obj, form, change):
+        # Handle image updates
+        if change:  # Only for existing objects
+            original = self.model.objects.get(pk=obj.pk)
+            for field in self.cloudinary_fields:
+                original_image = getattr(original, field)
+                new_image = getattr(obj, field)
+                
+                # Delete old image if it's being changed or removed
+                if original_image and original_image != new_image:
+                    try:
+                        uploader.destroy(original_image.public_id)
+                    except Exception as e:
+                        print(f"Error deleting old {field}: {e}")
+
+        super().save_model(request, obj, form, change)
+
+    def delete_cloudinary_images(self, instance):
+        """Delete all Cloudinary images associated with the instance"""
+        for field_name in self.cloudinary_fields:
+            if hasattr(instance, field_name):
+                field = getattr(instance, field_name)
+                if field:
+                    try:
+                        uploader.destroy(field.public_id)
+                    except Exception as e:
+                        print(f"Error deleting {field_name}: {e}")
+
+    def delete_model(self, request, obj):
+        self.delete_cloudinary_images(obj)
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            self.delete_cloudinary_images(obj)
+        super().delete_queryset(request, queryset)
+
+    def image_preview(self, obj):
+        """Generate thumbnail preview for first Cloudinary field"""
+        if self.cloudinary_fields:
+            first_field = getattr(obj, self.cloudinary_fields[0])
+            if first_field:
+                return format_html(
+                    # Fix: Use consistent positional parameters
+                    '<img src="{0}" style="max-height: {1}px; max-width: {1}px;border-radius: 5px;" />',
+                    first_field.url,
+                    self.thumbnail_size
+                )
+        return "No image"
+    image_preview.short_description = 'Preview'
+
 # Register your models here.
 @admin.register(Tutorial)
-class TutorialAdmin(admin.ModelAdmin):
-    list_display = ["title","img"]
-    
-    
+class TutorialAdmin(CloudinaryAdminMixin,admin.ModelAdmin):
+    cloudinary_fields = ['img']
+    list_display = ["title", "image_preview"]
+    readonly_fields = ['image_preview']
+
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'icon','slug', 'tutorial']
+class CategoryAdmin(CloudinaryAdminMixin,admin.ModelAdmin):
+    cloudinary_fields = ['icon']
+    list_display = ['name', 'image_preview', 'slug', 'tutorial']
+    readonly_fields = ['image_preview']
     list_filter = [("tutorial",admin.RelatedOnlyFieldListFilter)]
     
-    
 @admin.register(Course)
-class CourseAdmin(admin.ModelAdmin):
-    list_display = ['title', 'icon','description', 'category','is_nested']
+class CourseAdmin(CloudinaryAdminMixin,admin.ModelAdmin):
+    cloudinary_fields = ['icon']
+    list_display = ['title', 'image_preview','description', 'category','is_nested']
+    readonly_fields = ['image_preview']
     list_filter = [("category",admin.RelatedOnlyFieldListFilter)]
     actions = ['update_is_nested']
     
@@ -60,21 +122,22 @@ class CourseAdmin(admin.ModelAdmin):
           ).values_list('course_id', flat=True)
         )
         
-        print(len(nested_courses))
+        #print(len(nested_courses))
     
 @admin.register(Section)
-class SectionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'icon','slug','description', 'course']
+class SectionAdmin(CloudinaryAdminMixin,admin.ModelAdmin):
+    cloudinary_fields = ['icon']
+    list_display = ['title', 'image_preview','slug','description', 'course']
+    readonly_fields = ['image_preview']
     list_filter = [("course",admin.RelatedOnlyFieldListFilter)]
 
-# Step 1: Create a custom form for Lesson
+
 class LessonAdminForm(forms.ModelForm):
     content_object = forms.ChoiceField(
         choices=[],
         required=False,
         label="Related Object"
     )
-    
     
     class Meta:
         model = Lesson
@@ -114,6 +177,4 @@ class LessonAdminForm(forms.ModelForm):
 class LessonAdmin(admin.ModelAdmin):
     form = LessonAdminForm
     list_display = ['title', 'content','object_id', 'content_type','parent']
-    #list_filter = [("content_type",admin.RelatedOnlyFieldListFilter),("object_id",admin.RelatedOnlyFieldListFilter)]
     list_filter = [ParentFilter]
-       
