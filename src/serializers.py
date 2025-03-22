@@ -10,7 +10,7 @@ class TutorialSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    tutorial = TutorialSerializer()  # Nested representation of Tutorial
+    #tutorial = TutorialSerializer()  # Nested representation of Tutorial
 
     class Meta:
         model = Category
@@ -18,15 +18,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()  # Nested representation of Category
+    #category = CategorySerializer()  # Nested representation of Category
 
     class Meta:
         model = Course
-        fields = ['title', 'icon', 'description', 'category', 'created_at', 'updated_at']
+        fields = ['title', 'icon', 'description', 'category','is_nested', 'created_at', 'updated_at']
+        
+        
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    course = CourseSerializer()  # Nested representation of Course
+    #course = CourseSerializer()  # Nested representation of Course
 
     class Meta:
         model = Section

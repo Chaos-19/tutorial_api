@@ -30,6 +30,7 @@ class Course(TimestampedModel):
     icon = models.URLField(max_length=300, help_text="URL of the course icon")
     description = models.TextField(blank=True, default="")
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="courses")
+    is_nested = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -51,6 +52,7 @@ class Lesson(TimestampedModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True)
     object_id = models.PositiveIntegerField(null=True)
     parent = GenericForeignKey('content_type', 'object_id')
+    '''
 
     def __str__(self):
-        return self.title
+        return self'''

@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.contenttypes.models import ContentType
 
 from .models import Tutorial, Category, Course, Section, Lesson
 from .serializers import TutorialSerializer, CategorySerializer, CourseSerializer, SectionSerializer, LessonSerializer
@@ -10,11 +11,11 @@ from .serializers import TutorialSerializer, CategorySerializer, CourseSerialize
 class TutorialViewSet(viewsets.ModelViewSet):
     queryset = Tutorial.objects.all()
     serializer_class = TutorialSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    lookup_field = 'title'
 
     # List categories associated with a specific tutorial
     @action(detail=True, methods=['get'])
-    def categories(self, request, pk=None):
+    def categories(self, request, title=None):
         tutorial = self.get_object()
         categories = tutorial.categories.all()  # Related name in Category model
         serializer = CategorySerializer(categories, many=True)
@@ -33,7 +34,6 @@ class TutorialViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     lookup_field = 'slug'
 
     # List courses within a specific category
@@ -57,7 +57,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    #lookup_field = "category"
 
     # List sections within a specific course
     @action(detail=True, methods=['get'])
@@ -66,6 +66,24 @@ class CourseViewSet(viewsets.ModelViewSet):
         sections = course.sections.all()  # Related name in Section model
         serializer = SectionSerializer(sections, many=True)
         return Response(serializer.data)
+        
+    @action(detail=True, methods=['get'], url_path='lessons')
+    def get_lessons(self, request, pk=None):
+        course_name = self.kwargs.get('pk')  # Assuming the `pk` is the course name in the URL
+        try:
+            course = Course.objects.get(title=course_name)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=404)
+
+        # Filter lessons for this course
+        lessons = Lesson.objects.filter(
+            content_type__model='course',
+            object_id=course.id
+        )
+
+        # Serialize and return the lessons
+        serializer = LessonSerializer(lessons, many=True)
+        return Response(serializer.data)    
     
     # Filter courses by title
     @action(detail=False, methods=['get'])
@@ -81,7 +99,6 @@ class SectionViewSet(viewsets.ModelViewSet):
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
     lookup_field = 'slug'
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     # List lessons within a specific section
     @action(detail=True, methods=['get'])
@@ -104,7 +121,6 @@ class SectionViewSet(viewsets.ModelViewSet):
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     # Filter lessons by parent type and ID
     @action(detail=False, methods=['get'])

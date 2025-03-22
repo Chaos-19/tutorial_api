@@ -4,6 +4,34 @@ from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.contenttypes.models import ContentType
 from .models import Tutorial,Category,Course,Section,Lesson
 
+
+class ParentFilter(admin.SimpleListFilter):
+    title = 'Parent'
+    parameter_name = 'parent'
+
+    def lookups(self, request, model_admin):
+        # Get all possible parent objects
+        courses = Course.objects.all()
+        sections = Section.objects.all()
+        
+        # Create filter options
+        return [
+            *[('course-%d' % c.id, f'Course: {c.title}') for c in courses],
+            *[('section-%d' % s.id, f'Section: {s.title}') for s in sections],
+        ]
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            return queryset
+            
+        # Split the value into model type and ID
+        model_type, obj_id = self.value().split('-')
+        content_type = ContentType.objects.get(model=model_type)
+        return queryset.filter(
+            content_type=content_type,
+            object_id=obj_id
+        )
+
 # Register your models here.
 @admin.register(Tutorial)
 class TutorialAdmin(admin.ModelAdmin):
@@ -18,8 +46,21 @@ class CategoryAdmin(admin.ModelAdmin):
     
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ['title', 'icon','description', 'category']
+    list_display = ['title', 'icon','description', 'category','is_nested']
     list_filter = [("category",admin.RelatedOnlyFieldListFilter)]
+    actions = ['update_is_nested']
+    
+    def update_is_nested(self, request, queryset):
+        section_content_type = ContentType.objects.get(model="section")
+        lessons = Lesson.objects.filter(content_type=section_content_type)
+        
+        nested_courses = Course.objects.filter(
+          id__in=Section.objects.filter(
+            id__in=Lesson.objects.filter(content_type=section_content_type).values_list('object_id', flat=True)
+          ).values_list('course_id', flat=True)
+        )
+        
+        print(len(nested_courses))
     
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
@@ -33,6 +74,7 @@ class LessonAdminForm(forms.ModelForm):
         required=False,
         label="Related Object"
     )
+    
     
     class Meta:
         model = Lesson
@@ -72,4 +114,6 @@ class LessonAdminForm(forms.ModelForm):
 class LessonAdmin(admin.ModelAdmin):
     form = LessonAdminForm
     list_display = ['title', 'content','object_id', 'content_type','parent']
-    list_filter = [("content_type",admin.RelatedOnlyFieldListFilter)]
+    #list_filter = [("content_type",admin.RelatedOnlyFieldListFilter),("object_id",admin.RelatedOnlyFieldListFilter)]
+    list_filter = [ParentFilter]
+       
