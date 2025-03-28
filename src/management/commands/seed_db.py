@@ -5,14 +5,17 @@ from django.core.management.base import BaseCommand
 from src.models import Tutorial, Category, Course, Section, Lesson
 from django.contrib.contenttypes.models import ContentType
 
+import cloudinary.uploader
+
 class Command(BaseCommand):
     help = 'Seeds the database with initial data.'
 
     def handle(self, *args, **kwargs):
-        tutorial = Tutorial(img="http://test/img-url.png", title="Angular")
+        base_dir = "example/assets-Angular"
+        result = cloudinary.uploader.upload(f"{base_dir}/logo.png")
+        tutorial = Tutorial(img=result['public_id'], title="Angular")
         tutorial.save()
 
-        base_dir = "example/assets-Angular"
         files = [
           {
             'file': "categories/basic.json",
@@ -92,15 +95,18 @@ class Command(BaseCommand):
         
             }];
         for data in files:
-            category_db = Category(name=data['category'], icon=data['icon'], slug=data['category'].lower().replace(" ", "_"), tutorial=tutorial)
+            result = cloudinary.uploader.upload(data['icon'].replace("assets", base_dir))
+            category_db = Category(name=data['category'], icon=result['public_id'], slug=data['category'].lower().replace(" ", "_"), tutorial=tutorial)
             category_db.save()
             with open(f"{base_dir}/{data['file']}", "r") as f:
                 json_content = f.read()
                 for item in json.loads(json_content):
+                    result = cloudinary.uploader.upload(item['icon'].replace("assets", base_dir))
                     course_db = Course(
                         title=item['name'],
-                        icon=item['icon'],
+                        icon=result['public_id'],
                         description=item.get('courseInfo', item['description']),
+                        is_nested=item['isNested'],
                         category=category_db
                     )
                     course_db.save()

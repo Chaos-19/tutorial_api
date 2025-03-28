@@ -53,6 +53,12 @@ INSTALLED_APPS = [
     'src'
 ]
 
+# settings.py
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Your Vite dev server
+    "http://127.0.0.1:5173",
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -61,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'tutorial_api.urls'

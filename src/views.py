@@ -69,6 +69,13 @@ class CourseViewSet(viewsets.ModelViewSet):
         
     @action(detail=True, methods=['get'], url_path='lessons')
     def get_lessons(self, request, pk=None):
+        course = self.get_object()
+        lessons = course.lessons.all()
+        serializer = LessonSerializer(lessons, many=True)
+        return Response(serializer.data)
+    '''   
+    @action(detail=True, methods=['get'], url_path='lessons')
+    def get_lessons(self, request, pk=None):
         course_name = self.kwargs.get('pk')  # Assuming the `pk` is the course name in the URL
         try:
             course = Course.objects.get(title=course_name)
@@ -84,6 +91,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         # Serialize and return the lessons
         serializer = LessonSerializer(lessons, many=True)
         return Response(serializer.data)    
+    '''
     
     # Filter courses by title
     @action(detail=False, methods=['get'])
@@ -104,7 +112,7 @@ class SectionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def lessons(self, request, slug=None):
         section = self.get_object()
-        lessons = section.lesson_section.all()  # Related name in Lesson model
+        lessons = section.lessons.all()
         serializer = LessonSerializer(lessons, many=True)
         return Response(serializer.data)
     
