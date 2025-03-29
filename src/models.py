@@ -14,7 +14,6 @@ class CloudinaryField(BaseCloudinaryField):
             'unique_filename': False,
             'overwrite': True,
             'resource_type': 'image',
-            #'tags': ['map', 'market-map'],
             'invalidate': True,
             'quality': 'auto:eco',
         }
@@ -37,7 +36,6 @@ class Tutorial(TimestampedModel):
 class Category(TimestampedModel):
     name = models.CharField(max_length=300)
     icon = CloudinaryField("image")
-    #icon = models.URLField(max_length=1000, help_text="URL of the category icon")
     slug = models.SlugField(max_length=200, unique=True)
     tutorial = models.ForeignKey(Tutorial, on_delete=models.CASCADE, related_name="categories")
 
@@ -55,7 +53,6 @@ class Lesson(TimestampedModel):
 class Course(TimestampedModel):
     title = models.CharField(max_length=300)
     icon = CloudinaryField("image")
-    #icon = models.URLField(max_length=300, help_text="URL of the course icon")
     description = models.TextField(blank=True, default="")
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="courses")
     is_nested = models.BooleanField(default=False)
@@ -73,7 +70,6 @@ class Course(TimestampedModel):
 class Section(TimestampedModel):
     title = models.CharField(max_length=300)
     icon = CloudinaryField("image")
-    #icon = models.URLField(max_length=1000, help_text="URL of the section icon")
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True, default="")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="sections")
@@ -87,9 +83,3 @@ class Section(TimestampedModel):
 
     def __str__(self):
         return self.title
-
-
-    '''
-
-    def __str__(self):
-        return self'''
