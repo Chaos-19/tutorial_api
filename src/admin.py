@@ -6,6 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from .models import Tutorial,Category,Course,Section,Lesson
 
 from cloudinary import uploader
+from django.contrib import messages
+from src.gemini_test import generate
 
 
 class ParentFilter(admin.SimpleListFilter):
@@ -178,3 +180,37 @@ class LessonAdmin(admin.ModelAdmin):
     form = LessonAdminForm
     list_display = ['title', 'content','object_id', 'content_type','parent']
     list_filter = [ParentFilter]
+    actions = ['convert_to_markdown']
+    
+    def convert_to_markdown(self, request, queryset):
+        updated_count = 0
+        failed_count = 0
+        
+        for lesson in queryset:
+            try:
+                # Generate Markdown content
+                markdown_content = generate(lesson.content)
+                
+                if not markdown_content.strip():
+                    raise ValueError("Empty Markdown content generated")
+                
+                # Update and save the lesson
+                lesson.content = markdown_content
+                lesson.save()
+                updated_count += 1
+                
+            except Exception as e:
+                failed_count += 1
+                self.message_user(
+                    request,
+                    f"Failed to convert lesson '{lesson.title}': {str(e)}",
+                    level=messages.ERROR
+                )
+        
+        self.message_user(
+            request,
+            f"Successfully converted {updated_count} lessons to Markdown. {failed_count} failed.",
+            level=messages.SUCCESS if updated_count > 0 else messages.WARNING
+        )
+    
+    convert_to_markdown.short_description = "Convert selected lessons to Markdown"
