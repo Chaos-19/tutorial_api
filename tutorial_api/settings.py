@@ -50,7 +50,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'src'
+    'src',
+    'quiz',
+    'interview_question',
+    'django_filters',
 ]
 
 # settings.py
@@ -96,6 +99,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'src.permissions.IsAdminOrReadOnly',
     ],
+   'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 

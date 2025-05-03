@@ -48,10 +48,11 @@ class SectionSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     content_type_name = serializers.CharField(source='content_type.name', read_only=True)  # Readable content type name
     #parent_detail = serializers.SerializerMethodField()
+    id = serializers.IntegerField(read_only=True)  # Include the primary key 'id'
 
     class Meta:
         model = Lesson
-        fields = ['title', 'content', 'object_id', 'content_type', 'content_type_name']
+        fields = ['id','title', 'content', 'object_id', 'content_type', 'content_type_name']
 
     def get_parent_detail(self, obj):
         """Dynamically serialize the parent based on content type"""
