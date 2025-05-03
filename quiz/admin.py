@@ -1,14 +1,14 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import QuizCourse, Quiz, Question, Option
+from .models import Quiz, Question, Option
 from src.models import Tutorial
 from tutorial_api.admin import CloudinaryAdminMixin  # Adjust path as needed
 
 # Inlines
-class QuizInline(admin.TabularInline):
-    model = Quiz
+class QuestionInline(admin.TabularInline):
+    model = Question
     extra = 1
-    fields = ['title']
+    fields = ['text', 'detail', 'output']
     show_change_link = True
 
 class OptionInline(admin.TabularInline):
@@ -17,22 +17,16 @@ class OptionInline(admin.TabularInline):
     fields = ['key', 'text', 'is_correct']
     max_num = 4  # Limit to 4 options per question
 
-class QuestionInline(admin.TabularInline):
-    model = Question
-    extra = 1
-    fields = ['text', 'detail', 'output']
-    show_change_link = True
-
 # Admin Classes
-@admin.register(QuizCourse)
-class QuizCourseAdmin(CloudinaryAdminMixin, admin.ModelAdmin):
+@admin.register(Quiz)
+class QuizAdmin(CloudinaryAdminMixin, admin.ModelAdmin):
     cloudinary_fields = ['icon']
     list_display = ['title', 'image_preview', 'slug', 'tutorial']
     readonly_fields = ['image_preview']
     list_filter = [('tutorial', admin.RelatedOnlyFieldListFilter)]
     search_fields = ['title', 'slug']
     prepopulated_fields = {'slug': ('title',)}
-    inlines = [QuizInline]
+    inlines = [QuestionInline]
     list_per_page = 25
 
     def image_preview(self, obj):
@@ -49,21 +43,10 @@ class QuizCourseAdmin(CloudinaryAdminMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('tutorial')
 
-@admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
-    list_display = ['title', 'course']
-    list_filter = [('course', admin.RelatedOnlyFieldListFilter), ('course__tutorial', admin.RelatedOnlyFieldListFilter)]
-    search_fields = ['title']
-    inlines = [QuestionInline]
-    list_per_page = 25
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related('course__tutorial')
-
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ['text_preview', 'quiz', 'output_preview']
-    list_filter = [('quiz', admin.RelatedOnlyFieldListFilter), ('quiz__course__tutorial', admin.RelatedOnlyFieldListFilter)]
+    list_filter = [('quiz', admin.RelatedOnlyFieldListFilter), ('quiz__tutorial', admin.RelatedOnlyFieldListFilter)]
     search_fields = ['text', 'output']
     inlines = [OptionInline]
     list_per_page = 25
@@ -77,7 +60,7 @@ class QuestionAdmin(admin.ModelAdmin):
     output_preview.short_description = 'Output'
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('quiz__course')
+        return super().get_queryset(request).select_related('quiz__tutorial')
 
 @admin.register(Option)
 class OptionAdmin(admin.ModelAdmin):
@@ -91,4 +74,4 @@ class OptionAdmin(admin.ModelAdmin):
     text_preview.short_description = 'Option Text'
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('question__quiz')
+        return super().get_queryset(request).select_related('question__quiz__tutorial')
