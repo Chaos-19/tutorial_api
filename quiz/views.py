@@ -8,6 +8,7 @@ class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
     lookup_field = "slug"  # Use slug for lookups instead of pk
+    pagination_class = None  # Disable pagination
 
     @action(detail=True, methods=["get"])
     def questions(self, request, slug=None):
@@ -33,6 +34,18 @@ class QuizViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(quizzes, many=True)
             return Response(serializer.data)
         return Response({"error": "Tutorial ID parameter is required"}, status=400)
+
+    @action(detail=False, methods=["get"])
+    def by_tutorial_title(self, request):
+        tutorial_title = request.query_params.get("title", None)
+        if tutorial_title:
+            quizzes = self.queryset.filter(tutorial__title__icontains=tutorial_title)
+            serializer = self.get_serializer(quizzes, many=True)
+            return Response(serializer.data)
+        return Response({"error": "Tutorial title parameter is required"}, status=400)
+
+        
+
 
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()

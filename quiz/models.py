@@ -14,7 +14,7 @@ class Quiz(models.Model):
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="questions")
     text = models.TextField()
-    detail_about = models.TextField(blank=True)
+    detail = models.TextField(blank=True)
     output = models.TextField(blank=True)
 
     def __str__(self):

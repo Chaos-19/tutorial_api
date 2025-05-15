@@ -9,6 +9,7 @@ from django.contrib import admin
 urlpatterns = [
     path('', include("src.urls")),
     path('', include("quiz.urls")),
+    path('', include("interview_question.urls")),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
 ]

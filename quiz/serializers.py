@@ -5,6 +5,8 @@ class CloudinaryURLField(serializers.Field):
     def to_representation(self, value):
         if value:
             return value.url
+        return None
+
 
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,8 +21,9 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'detail', 'output', 'options']
 
 class QuizSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, read_only=True)
+    #questions = QuestionSerializer(many=True, read_only=True)
+    icon = CloudinaryURLField()
     
     class Meta:
         model = Quiz
-        fields = ['id', 'title', 'slug', 'icon', 'questions']
+        fields = ['id', 'title', 'slug', 'icon']

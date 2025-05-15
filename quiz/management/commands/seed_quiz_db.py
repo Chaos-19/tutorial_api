@@ -36,7 +36,7 @@ class Command(BaseCommand):
                 continue
 
             quiz = Quiz(
-                title=f"{data['name']} Basics",
+                title=f"{data['name']}",
                 slug=f"{data['slug']}_{tutorial.title}",
                 icon=result['public_id'],
                 tutorial=tutorial
@@ -51,7 +51,7 @@ class Command(BaseCommand):
                 for quiz_data in quizzes:
                     question = Question(
                         text=quiz_data['title'],
-                        detail=quiz_data.get('detail', ''),
+                        detail_about=quiz_data.get('detail', ''),
                         output=quiz_data.get('output', ''),
                         quiz=quiz
                     )

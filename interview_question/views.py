@@ -7,7 +7,8 @@ from .serializers import InterviewSerializer, QuestionSerializer
 class InterviewViewSet(viewsets.ModelViewSet):
     queryset = Interview.objects.all()
     serializer_class = InterviewSerializer
-    lookup_field = 'slug'  # Use slug for detail views (e.g., /interviews/python-interview-prep/)
+    lookup_field = 'slug' 
+    pagination_class = None  # Disable pagination
 
     @action(detail=True, methods=['get'])
     def questions(self, request, slug=None):
@@ -28,6 +29,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
+    pagination_class = None  # Disable pagination
 
     @action(detail=False, methods=['get'])
     def search_by_text(self, request):
