@@ -50,7 +50,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'src'
+    'src',
+    'quiz',
+    'interview_question',
+    'django_filters',
+    'dbbackup',
 ]
 
 # settings.py
@@ -96,6 +100,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'src.permissions.IsAdminOrReadOnly',
     ],
+   'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 
@@ -156,3 +161,5 @@ INTERNAL_IPS = [
   "127.0.0.1", 
   # ... 
 ]
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+#DBBACKUP_STORAGE_OPTIONS = {'location': '/path/to/backup/directory/'}

@@ -7,13 +7,17 @@ from django.contrib.contenttypes.models import ContentType
 
 import cloudinary.uploader
 
+from src.gemini_test import generate
+from src.utils import format_md,html_to_markdown
+from django.db import transaction
+
 class Command(BaseCommand):
     help = 'Seeds the database with initial data.'
 
     def handle(self, *args, **kwargs):
         base_dir = "example/assets-Angular"
         result = cloudinary.uploader.upload(f"{base_dir}/logo.png")
-        tutorial = Tutorial(img=result['public_id'], title="Angular")
+        tutorial = Tutorial(img=result['public_id'], title="Angular M")
         tutorial.save()
 
         files = [
@@ -93,7 +97,8 @@ class Command(BaseCommand):
             'icon': "assets/main-icons/toolbox.svg",
             'category': "angular tools",
         
-            }];
+            }]
+            
         for data in files:
             result = cloudinary.uploader.upload(data['icon'].replace("assets", base_dir))
             category_db = Category(name=data['category'], icon=result['public_id'], slug=data['category'].lower().replace(" ", "_"), tutorial=tutorial)
@@ -130,7 +135,7 @@ class Command(BaseCommand):
                                         for lesson in lessons:
                                             lesson_db = Lesson(
                                                 title=lesson['title']['rendered'],
-                                                content=lesson['content']['rendered'],
+                                                content=html_to_markdown(format_md(lesson['content']['rendered'])),
                                                 content_type=ContentType.objects.get_for_model(section_db),
                                                 object_id=section_db.id
                                             )
@@ -142,7 +147,7 @@ class Command(BaseCommand):
                             for lesson in lessons:
                                 lesson_db = Lesson(
                                     title=lesson['title']['rendered'],
-                                    content=lesson['content']['rendered'],
+                                    content=html_to_markdown(format_md(lesson['content']['rendered'])),
                                     content_type=ContentType.objects.get_for_model(course_db),
                                     object_id=course_db.id
                                 )
