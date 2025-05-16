@@ -37,9 +37,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-gh9l08^e=bh3dt(3##ubtv*m8(^%-ov5sdv+s+fwk0iyxz-16*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG",False)
+DEBUG = os.getenv("DEBUG", "False")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(' ') if not DEBUG else []
+if DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    hosts = os.getenv("ALLOWED_HOSTS", "")
+    ALLOWED_HOSTS = [host.strip() for host in hosts.split(",") if host.strip()]
+
+
+
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = []
+else:
+    origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 
 # Application definition
@@ -59,8 +71,6 @@ INSTALLED_APPS = [
     'dbbackup',
 ]
 
-# settings.py
-CORS_ALLOWED_ORIGINS =  os.getenv("ALLOWED_HOSTS", "").split(',') if not DEBUG else []
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
