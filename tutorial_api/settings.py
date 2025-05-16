@@ -60,10 +60,7 @@ INSTALLED_APPS = [
 ]
 
 # settings.py
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Your Vite dev server
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOWED_ORIGINS =  os.getenv("ALLOWED_HOSTS", "").split(',') if not DEBUG else []
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
