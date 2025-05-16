@@ -6,7 +6,7 @@ from google.genai import types
 
 def generate(content_html):
     client = genai.Client(
-        api_key="AIzaSyCX6u9wQD9W8CwiSYr1Gotm5qHrt62SAJY",
+        
     )
 
     model = "gemini-2.0-flash"
