@@ -14,6 +14,7 @@ from pathlib import Path
 import cloudinary
 from dotenv import load_dotenv
 import os
+import dj_database_url
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ cloudinary.config(
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -35,9 +37,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-gh9l08^e=bh3dt(3##ubtv*m8(^%-ov5sdv+s+fwk0iyxz-16*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG",False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(' ') if not DEBUG else []
 
 
 # Application definition
@@ -72,6 +74,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'tutorial_api.urls'
@@ -116,14 +119,11 @@ DATABASES = {
 }
 '''
 DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DATABASE_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.getenv('DATABASE_NAME', 'your_database_name'),
-        'USER': os.getenv('DATABASE_USER', 'your_database_user'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'your_database_password'),
-        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
-        'PORT': os.getenv('DATABASE_PORT', '5432'),
-    }
+    'default': dj_database_url.config(
+        # Replace this value with your local database's connection string.
+        default=os.getenv("DATABASE_URL",""),
+        conn_max_age=600
+    )
 }
 
 
@@ -164,6 +164,20 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+if not DEBUG:
+    # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
+    
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    
+    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
+    
+    # and renames the files with unique names for each version to support long-term caching
+    
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    
+
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -174,5 +188,8 @@ INTERNAL_IPS = [
   "127.0.0.1", 
   # ... 
 ]
+
+
+
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 #DBBACKUP_STORAGE_OPTIONS = {'location': '/path/to/backup/directory/'}
