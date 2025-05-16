@@ -51,7 +51,7 @@ class Command(BaseCommand):
                 for quiz_data in quizzes:
                     question = Question(
                         text=quiz_data['title'],
-                        detail_about=quiz_data.get('detail', ''),
+                        detail=quiz_data.get('detail', ''),
                         output=quiz_data.get('output', ''),
                         quiz=quiz
                     )
