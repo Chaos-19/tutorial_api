@@ -46,7 +46,7 @@ def run_node_script(text):
 def code_b(*, tag: Tag, text: str,**kwargs):
     language = run_node_script(text)
     print(f"{language=}")
-    code_lang = language.lower() if language.lower() in ["html", "css","javascript", "java"] else "java"
+    code_lang = language.lower() if language.lower() in ["html", "css","javascript"] else "javascript"
     print(f"{code_lang=}")
     return f'```{code_lang}\n{text}\n```\n'
 

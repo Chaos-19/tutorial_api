@@ -14,6 +14,7 @@ from pathlib import Path
 import cloudinary
 from dotenv import load_dotenv
 import os
+import dj_database_url
 
 load_dotenv()
 
@@ -28,6 +29,7 @@ cloudinary.config(
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -35,9 +37,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-gh9l08^e=bh3dt(3##ubtv*m8(^%-ov5sdv+s+fwk0iyxz-16*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False")
 
-ALLOWED_HOSTS = []
+if not DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    hosts = os.getenv("ALLOWED_HOSTS", "")
+    ALLOWED_HOSTS = [host.strip() for host in hosts.split(",") if host.strip()]
+
+
+
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = []
+else:
+    origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in origins.split(",") if origin.strip()]
 
 
 # Application definition
@@ -57,11 +71,6 @@ INSTALLED_APPS = [
     'dbbackup',
 ]
 
-# settings.py
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Your Vite dev server
-    "http://127.0.0.1:5173",
-]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -72,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'tutorial_api.urls'
@@ -95,8 +105,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tutorial_api.wsgi.application'
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    #'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    #'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': None,
+    'PAGE_SIZE': None,
     'DEFAULT_PERMISSION_CLASSES': [
         'src.permissions.IsAdminOrReadOnly',
     ],
@@ -107,12 +119,22 @@ REST_FRAMEWORK = {
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+'''
+DATABASES = {
+    'default': dj_database_url.config(
+        # Replace this value with your local database's connection string.
+        default=os.getenv("DATABASE_URL",""),
+        conn_max_age=600
+    )
+}
+
 
 
 # Password validation
@@ -151,6 +173,20 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+if not DEBUG:
+    # Tell Django to copy static assets into a path called `staticfiles` (this is specific to Render)
+    
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    
+    # Enable the WhiteNoise storage backend, which compresses static files to reduce disk use
+    
+    # and renames the files with unique names for each version to support long-term caching
+    
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -161,5 +197,8 @@ INTERNAL_IPS = [
   "127.0.0.1", 
   # ... 
 ]
+
+
+
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
 #DBBACKUP_STORAGE_OPTIONS = {'location': '/path/to/backup/directory/'}
